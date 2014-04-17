@@ -1,0 +1,196 @@
+<html>
+	<head>
+		<title>Conway's Game of Life</title>
+	</head>
+	<body style="margin:0;padding:0;">
+		<canvas id="game_of_life_canvas" style="border:.1px solid #000000;margin:0;padding:0;"></canvas>
+		<script>
+			var Cell = function(x, y, alive){
+				this.x = x;
+				this.y = y;
+				this.alive = alive;
+				this.aliveLastGen = alive;
+			}
+			
+			function drawLifeBoard(canvas, numSquares){
+				var ctx = canvas.getContext("2d");
+				var width = canvas.width;
+				var height = canvas.height;
+				var widthEachRect = width/numSquares;
+				var heightEachRect = height/numSquares;
+				var board = [];
+				
+				var widthEachRect = width/numSquares;
+				var heightEachRect = height/numSquares;
+				
+				ctx.lineWidth=".1";
+				
+				for(var i=0; i < numSquares; i++){
+					board[i] = [];
+					for(var j=0; j < numSquares; j++){
+						var x = i * widthEachRect;
+						var y = j * heightEachRect;
+						var alive = false;
+						//if((i <= numSquares/2) && (j <= numSquares/2)){
+							alive = (Math.floor((Math.random()*10000)+1) % 7) == 0;
+						//}
+						board[i][j] = new Cell(i, j, alive);
+						ctx.rect(x, y, widthEachRect, heightEachRect);
+					}
+				}
+				
+				ctx.stroke();
+				
+				return board;
+			}
+			
+			function fillCell(ctx, numSquares, cell){
+				var width = canvas.width;
+				var height = canvas.height;
+				var widthEachRect = width/numSquares;
+				var heightEachRect = height/numSquares;
+				
+				var x = cell.x * widthEachRect;
+				var y = cell.y * heightEachRect;
+				
+				ctx.fillStyle = cell.alive ? "#000000" : "#FFFFFF";
+				cell.aliveLastGen = cell.alive;
+				
+				ctx.fillRect(x, y, widthEachRect, heightEachRect);
+			}
+			
+			function drawGeneration(canvas, numSqaures, board){
+				var ctx = canvas.getContext("2d");
+				
+				for(var i=0; i < numSquares; i++){
+					for(var j=0; j < numSquares; j++){
+						fillCell(ctx, numSquares, board[i][j]);
+					}
+				}
+				
+				ctx.stroke();
+			}
+			
+			function processRulesOfLife(board){
+				for(var i=0; i < board.length; i++){
+					for(var j=0; j < board[i].length; j++){
+						var neighbors = 0, x = 0, y = 0;
+						
+						x = (i == 0) ? (board.length - 1) : i - 1;
+						y = (j == 0) ? (board[x].length - 1) : j - 1;
+						
+						if (board[x][y].aliveLastGen){
+							neighbors += 1;
+						}
+						
+						y = j;
+						
+						if (board[x][y].aliveLastGen){
+							neighbors += 1;
+						}
+						
+						y = ((j + 1) == board[x].length) ? 0 : j + 1;
+						
+						if (board[x][y].aliveLastGen){
+							neighbors += 1;
+						}
+						
+						x = i;
+						y = (j == 0) ? (board[x].length - 1) : j - 1;
+						
+						if (board[x][y].aliveLastGen){
+							neighbors += 1;
+						}
+						
+						y = ((j + 1) == board[x].length) ? 0 : j + 1;
+						
+						if (board[x][y].aliveLastGen){
+							neighbors += 1;
+						}
+						
+						x = ((i + 1) == board.length) ? 0 : i + 1;
+						y = (j == 0) ? (board[x].length - 1) : j - 1;
+							
+						if (board[x][y].aliveLastGen){
+							neighbors += 1;
+						}
+						
+						y = j;
+						
+						if (board[x][y].aliveLastGen){
+							neighbors += 1;
+						}
+						
+						y = ((j + 1) == board[x].length) ? 0 : j + 1;
+							
+						if (board[x][y].aliveLastGen){
+							neighbors += 1;
+						}
+						
+						cell = board[i][j];
+						
+						var before = cell.aliveLastGen;
+						
+						if(before){
+							if((neighbors == 2) || (neighbors == 3)){
+								//Any live cell with two or three live neighbours lives on to the next generation.
+								cell.alive = true;
+							}
+							else{
+								//Any live cell with fewer than two live neighbours dies, as if caused by under-population.
+								//Any live cell with more than three live neighbours dies, as if by overcrowding.
+								cell.alive = false;
+							}
+						}
+						else{
+							if (neighbors == 3){
+								//Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+								cell.alive = true;
+							}
+						}
+						
+						//console.log("[" + i + "][" + j + "]: " + before + " --> " + cell.alive);
+					}
+				}
+			}
+			
+			function randomBirth(board, cells){
+				randomX = 0;
+				randomY = 0;
+				
+				for(var i=0; i < cells;){
+					randomX = Math.floor((Math.random()*board.length));
+					randomY = Math.floor((Math.random()*board[randomX].length));
+					
+					if(!board[randomX][randomY].alive){
+						board[randomX][randomY].alive = true;
+						i++;
+					}
+				}
+			}
+			
+			var canvas = document.getElementById("game_of_life_canvas");
+			var numSquares = 150;
+			var dimension = Math.min(window.innerWidth, window.innerHeight);
+			
+			canvas.height = canvas.width = dimension;
+			
+			var board = drawLifeBoard(canvas, numSquares);
+			var interval = 50;
+			
+			//randomBirth(board, 997);
+			
+			drawGeneration(canvas, numSquares, board);
+			
+			setInterval(function(){
+				processRulesOfLife(board);
+				if(interval-- <= 0) {
+					randomBirth(board, 50);
+					interval = 50;					
+				}
+				
+				drawGeneration(canvas, numSquares, board);
+			}, 100);
+		</script>
+	</body>
+</html>
